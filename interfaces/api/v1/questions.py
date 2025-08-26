@@ -1,5 +1,5 @@
 """Question management endpoints."""
-
+from http.client import HTTPException
 from typing import Optional, List
 from uuid import UUID
 

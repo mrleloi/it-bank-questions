@@ -7,7 +7,7 @@ from uuid import UUID
 from datetime import datetime
 
 from domain.repositories import QuestionRepository, ContentRepository
-from domain.services import ContentHierarchyService
+from domain.services.content_hierarchy_service import ContentHierarchyService
 from domain.value_objects import ContentPath
 from application.dto.request import ImportQuestionsRequest
 from application.dto.response import ImportResultResponse

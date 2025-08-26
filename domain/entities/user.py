@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from uuid import UUID
 
+from ..events import UserSuspendedEvent
 from ..value_objects import UserRole, UserStatus, ReviewInterval
 from ..exceptions import EntityValidationException
 from .base import AggregateRoot

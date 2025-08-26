@@ -2,7 +2,6 @@
 
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.contrib.postgres.fields import ArrayField
 from django.core.validators import EmailValidator, MinLengthValidator
 from .base import BaseModel, SoftDeleteModel
 

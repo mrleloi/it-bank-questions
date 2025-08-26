@@ -1,4 +1,5 @@
 """Authenticate user use case."""
+import logging
 
 import bcrypt
 import jwt
@@ -14,6 +15,8 @@ from application.mappers import UserMapper
 from application.services import EventBus
 from application.config import AuthConfig
 
+
+logger = logging.getLogger(__name__)
 
 class AuthenticateUserUseCase:
     """Use case for user authentication."""
@@ -45,7 +48,7 @@ class AuthenticateUserUseCase:
 
         # Verify password
         if not self._verify_password(request.password, user.password_hash):
-            raise BusinessRuleViolationException("Invalid credentials")
+            raise BusinessRuleViolationException("Invalid password")
 
         # Check if user can login
         if not user.can_login():
@@ -55,6 +58,7 @@ class AuthenticateUserUseCase:
 
         # Generate tokens
         access_token, refresh_token = self._generate_tokens(user.id)
+        logger.info(f"Token: {access_token}, {refresh_token}")
 
         # Update last login
         user.update_login()
@@ -68,7 +72,7 @@ class AuthenticateUserUseCase:
         return AuthTokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
-            expires_in=self.auth_config.access_token_expire_minutes * 60,
+            expires_in=self.auth_config.get('access_token_expire_minutes') * 60,
             user=UserMapper.to_response_dto(user)
         )
 
@@ -86,14 +90,14 @@ class AuthenticateUserUseCase:
             'sub': str(user_id),
             'type': 'access',
             'exp': datetime.utcnow() + timedelta(
-                minutes=self.auth_config.access_token_expire_minutes
+                minutes=self.auth_config.get('access_token_expire_minutes')
             ),
             'iat': datetime.utcnow()
         }
         access_token = jwt.encode(
             access_payload,
-            self.auth_config.secret_key,
-            algorithm=self.auth_config.algorithm
+            self.auth_config.get('secret_key'),
+            algorithm=self.auth_config.get('algorithm')
         )
 
         # Refresh token
@@ -101,14 +105,14 @@ class AuthenticateUserUseCase:
             'sub': str(user_id),
             'type': 'refresh',
             'exp': datetime.utcnow() + timedelta(
-                days=self.auth_config.refresh_token_expire_days
+                days=self.auth_config.get('refresh_token_expire_days')
             ),
             'iat': datetime.utcnow()
         }
         refresh_token = jwt.encode(
             refresh_payload,
-            self.auth_config.secret_key,
-            algorithm=self.auth_config.algorithm
+            self.auth_config.get('secret_key'),
+            algorithm=self.auth_config.get('algorithm')
         )
 
         return access_token, refresh_token

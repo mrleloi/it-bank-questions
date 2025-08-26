@@ -1,8 +1,7 @@
 """User management endpoints."""
-
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from application.use_cases.users import (
     GetUserProfileUseCase,

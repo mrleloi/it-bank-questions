@@ -5,7 +5,8 @@ from django.conf import settings
 
 from infrastructure.cache import CacheManager, RedisCache, MemoryCache
 from infrastructure.persistence.repositories import *
-from infrastructure.services import *
+from .importers import JsonQuestionImporter
+from .services import *
 from domain.services import *
 from application.use_cases.auth import *
 from application.use_cases.learning import *
@@ -104,6 +105,13 @@ class Container(containers.DeclarativeContainer):
         question_repo=question_repository
     )
 
+    # Importers
+    json_importer = providers.Factory(
+        JsonQuestionImporter,
+        question_repository=question_repository,
+        content_repository=content_repository
+    )
+
     # Application services
     email_service = providers.Singleton(
         DjangoEmailService,
@@ -172,10 +180,10 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Use cases - Analytics
-    get_user_analytics_use_case = providers.Factory(
-        GetUserAnalyticsUseCase,
-        analytics_service=analytics_service
-    )
+    # get_user_analytics_use_case = providers.Factory(
+    #     GetUserAnalyticsUseCase,
+    #     analytics_service=analytics_service
+    # )
 
     # Initialize resources
     async def init_resources(self):

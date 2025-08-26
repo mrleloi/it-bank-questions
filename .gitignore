@@ -1,5 +1,93 @@
-.venv
-resources
-.env.development
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static_root/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
 .env.test
-*.zip
+.env.development
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+celerybeat-schedule.db
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# Docker
+docker-compose.override.yml
+
+# Project specific
+data/
+logs/
+temp/
+backups/
+*.dump
+*.sql
+
+# Node (if frontend in same repo)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Resources
+resources/

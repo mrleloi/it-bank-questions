@@ -1,0 +1,226 @@
+Folder PATH listing
+Volume serial number is E8D5-FA22
+C:.
+|   .env.development
+|   .env.example
+|   .env.test
+|   .gitignore
+|   manage.py
+|   poetry.lock
+|   project-summary-deployment.md
+|   pyproject.toml
+|   structure.txt
+|   
++---application
+|   |   config.py
+|   |   
+|   +---dto
+|   |   |   common.py
+|   |   |   __init__.py
+|   |   |   
+|   |   +---request
+|   |   |       auth_dto.py
+|   |   |       content_dto.py
+|   |   |       learning_dto.py
+|   |   |       
+|   |   \---response
+|   |           analytics_dto.py
+|   |           content_dto.py
+|   |           progress_dto.py
+|   |           question_dto.py
+|   |           session_dto.py
+|   |           user_dto.py
+|   |           
+|   +---mappers
+|   |       base.py
+|   |       content_mapper.py
+|   |       progress_mapper.py
+|   |       question_mapper.py
+|   |       session_mapper.py
+|   |       user_mapper.py
+|   |       __init__.py
+|   |       
+|   +---services
+|   |       cache_service.py
+|   |       email_service.py
+|   |       event_bus.py
+|   |       notification_service.py
+|   |       __init__.py
+|   |       
+|   \---use_cases
+|       |   __init__.py
+|       |   
+|       +---analytics
+|       |       get_user_analytics.py
+|       |       
+|       +---auth
+|       |       authenticate_user.py
+|       |       refresh_token_use_case.py
+|       |       register_user.py
+|       |       reset_password_use_case.py
+|       |       verify_email_use_case.py
+|       |       __init__.py
+|       |       
+|       +---content
+|       |       get_content_tree_use_case.py
+|       |       import_questions.py
+|       |       search_content_use_case.py
+|       |       __init__.py
+|       |       
+|       +---learning
+|       |       end_session_use_case.py
+|       |       get_next_question.py
+|       |       request_hint.py
+|       |       review_card.py
+|       |       start_learning_session.py
+|       |       submit_answer.py
+|       |       __init__.py
+|       |       
+|       \---progress
+|               get_user_progress.py
+|               __init__.py
+|               
++---core
+|   |   asgi.py
+|   |   celery.py
+|   |   urls.py
+|   |   wsgi.py
+|   |   __init__.py
+|   |   
+|   \---settings
+|           base.py
+|           development.py
+|           production.py
+|           
++---domain
+|   |   exceptions.py
+|   |   __init__.py
+|   |   
+|   +---entities
+|   |       base.py
+|   |       content_hierarchy.py
+|   |       learning_event.py
+|   |       learning_session.py
+|   |       progress.py
+|   |       question.py
+|   |       spaced_repetition.py
+|   |       user.py
+|   |       __init__.py
+|   |       
+|   +---events
+|   |       base.py
+|   |       learning_events.py
+|   |       user_events.py
+|   |       __init__.py
+|   |       
+|   +---repositories
+|   |       base.py
+|   |       content_repository.py
+|   |       event_repository.py
+|   |       progress_repository.py
+|   |       question_repository.py
+|   |       session_repository.py
+|   |       spaced_repetition_repository.py
+|   |       user_repository.py
+|   |       __init__.py
+|   |       
+|   +---services
+|   |       achievement_service.py
+|   |       analytics_service.py
+|   |       content_hierarchy_service.py
+|   |       learning_path_service.py
+|   |       spaced_repetition_service.py
+|   |       
+|   \---value_objects
+|           card_state.py
+|           content_hierarchy.py
+|           difficulty_level.py
+|           learning_metrics.py
+|           question_type.py
+|           user_types.py
+|           __init__.py
+|           
++---infrastructure
+|   |   container.py
+|   |   
+|   +---cache
+|   |       cache_manager.py
+|   |       memory_cache.py
+|   |       redis_cache.py
+|   |       __init__.py
+|   |       
+|   +---celery
+|   |   |   celery_app.py
+|   |   |   __init__.py
+|   |   |   
+|   |   \---tasks
+|   |           analytics_tasks.py
+|   |           import_tasks.py
+|   |           learning_tasks.py
+|   |           
+|   +---importers
+|   |       base_importer.py
+|   |       json_importer.py
+|   |       __init__.py
+|   |       
+|   +---management
+|   |   \---commands
+|   |           import_questions.py
+|   |           
+|   +---persistence
+|   |   +---models
+|   |   |       base.py
+|   |   |       content_models.py
+|   |   |       event_models.py
+|   |   |       learning_models.py
+|   |   |       progress_models.py
+|   |   |       question_models.py
+|   |   |       user_models.py
+|   |   |       __init__.py
+|   |   |       
+|   |   \---repositories
+|   |           base.py
+|   |           content_repository.py
+|   |           event_repository.py
+|   |           progress_repository.py
+|   |           question_repository.py
+|   |           session_repository.py
+|   |           spaced_repetition_repository.py
+|   |           user_repository.py
+|   |           __init__.py
+|   |           
+|   \---service
+|           email_service.py
+|           event_bus_service.py
+|           __init__.py
+|           
+\---interfaces
+    +---api
+    |   |   dependencies.py
+    |   |   exception_handlers.py
+    |   |   main.py
+    |   |   websocket.py
+    |   |   
+    |   +---middleware
+    |   |       auth.py
+    |   |       logging.py
+    |   |       rate_limit.py
+    |   |       request_id.py
+    |   |       __init__.py
+    |   |       
+    |   \---v1
+    |           achievements.py
+    |           analytics.py
+    |           auth.py
+    |           content.py
+    |           learning.py
+    |           progress.py
+    |           questions.py
+    |           users.py
+    |           __init__.py
+    |           
+    \---rest
+            serializers.py
+            urls.py
+            views.py
+            

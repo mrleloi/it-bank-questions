@@ -1,7 +1,6 @@
 """Question-related models."""
 
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .base import BaseModel
 from .content_models import FacetModel
@@ -55,7 +54,7 @@ class QuestionModel(BaseModel):
         default='hard_resource',
         db_index=True
     )
-    tags = ArrayField(
+    tags = models.JSONField(
         models.CharField(max_length=50),
         default=list,
         blank=True,
@@ -64,24 +63,24 @@ class QuestionModel(BaseModel):
     estimated_time_seconds = models.IntegerField(null=True, blank=True)
 
     # For theory/scenario questions
-    sample_answer = models.TextField(blank=True)
-    evaluation_criteria = models.TextField(blank=True)
+    sample_answer = models.TextField(null=True, blank=True)
+    evaluation_criteria = models.TextField(null=True, blank=True)
 
     # Hints (JSON array)
     hints = models.JSONField(default=list)
 
     # References and learning materials
-    references = ArrayField(
+    references = models.JSONField(
         models.URLField(),
         default=list,
         blank=True
     )
-    learning_objectives = ArrayField(
+    learning_objectives = models.JSONField(
         models.CharField(max_length=255),
         default=list,
         blank=True
     )
-    prerequisites = ArrayField(
+    prerequisites = models.JSONField(
         models.CharField(max_length=255),
         default=list,
         blank=True

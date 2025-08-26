@@ -1,4 +1,5 @@
 """Authentication endpoints."""
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
@@ -22,6 +23,7 @@ from ..dependencies import get_use_case
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
@@ -52,6 +54,7 @@ async def login(
     try:
         return await use_case.execute(request)
     except Exception as e:
+        logger.error(f"Login error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"

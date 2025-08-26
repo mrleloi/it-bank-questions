@@ -1,5 +1,4 @@
 """Learning-related models."""
-
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .base import BaseModel
@@ -47,7 +46,7 @@ class LearningSessionModel(BaseModel):
     # Configuration
     question_limit = models.IntegerField(null=True, blank=True)
     time_limit_minutes = models.IntegerField(null=True, blank=True)
-    question_types = ArrayField(
+    question_types = models.JSONField(
         models.CharField(max_length=20),
         default=list,
         blank=True
@@ -139,7 +138,7 @@ class UserResponseModel(BaseModel):
 
     # Hints used
     hints_used = models.IntegerField(default=0)
-    hint_levels = ArrayField(
+    hint_levels = models.JSONField(
         models.IntegerField(),
         default=list,
         blank=True

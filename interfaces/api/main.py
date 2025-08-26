@@ -51,9 +51,9 @@ def create_app() -> FastAPI:
         title="Learning Platform API",
         description="Adaptive learning platform with spaced repetition",
         version="1.0.0",
-        docs_url="/api/docs",
-        redoc_url="/api/redoc",
-        openapi_url="/api/openapi.json",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
         lifespan=lifespan
     )
 

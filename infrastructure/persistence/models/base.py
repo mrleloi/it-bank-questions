@@ -21,6 +21,7 @@ class BaseModel(models.Model):
         auto_now=True,
         db_index=True
     )
+    # objects = models.Manager()
 
     class Meta:
         abstract = True

@@ -1,16 +1,17 @@
 """Base entity classes."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, KW_ONLY
 from datetime import datetime
 from typing import List, Optional, Any, Dict
 from uuid import UUID, uuid4
 
+from domain.events import DomainEvent
 
-@dataclass
+
+@dataclass(kw_only=True)
 class Entity(ABC):
     """Base class for all entities."""
-
     id: UUID = field(default_factory=uuid4)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -47,8 +48,9 @@ class Entity(ABC):
 class AggregateRoot(Entity):
     """Base class for aggregate roots."""
 
-    _domain_events: List['DomainEvent'] = field(default_factory=list, init=False, repr=False)
-    version: int = field(default=1)
+    def __init__(self):
+        self._domain_events: List['DomainEvent'] = field(default_factory=list, init=False, repr=False)
+        self.version: int = field(default=1)
 
     def add_domain_event(self, event: 'DomainEvent') -> None:
         """Add a domain event."""

@@ -1,0 +1,65 @@
+{% extends "rest_framework/base.html" %}
+
+{% block title %}
+API Dashboard - {{ name }}
+{% endblock %}
+
+{% block branding %}
+<a class="navbar-brand" rel="nofollow" href="{% url 'rest_api:api-root' %}">
+    Learning Platform API
+</a>
+{% endblock %}
+
+{% block userlinks %}
+{{ block.super }}
+{% if user.is_authenticated %}
+<li><a href="{% url 'rest_api:user-me' %}">My Profile</a></li>
+<li><a href="{% url 'rest_api:session-my-sessions' %}">My Sessions</a></li>
+<li><a href="{% url 'rest_api:progress-my-progress' %}">My Progress</a></li>
+{% if user.is_staff %}
+<li><a href="{% url 'rest_api:user-stats' %}">User Stats</a></li>
+<li><a href="{% url 'rest_api:session-stats' %}">Session Stats</a></li>
+{% endif %}
+{% else %}
+<li><a href="{% url 'admin:login' %}">Login</a></li>
+{% endif %}
+{% endblock %}
+
+{% block description %}
+<div class="description">
+    {% if description %}
+    <p>{{ description }}</p>
+    {% endif %}
+
+    {% if not user.is_authenticated %}
+    <div class="alert alert-info">
+        <strong>Authentication Required:</strong>
+        Please <a href="{% url 'admin:login' %}">login</a> to access most endpoints.
+        Some read-only endpoints are available without authentication in development mode.
+    </div>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <div class="alert alert-success">
+        <strong>Welcome, {{ user.get_full_name|default:user.username }}!</strong>
+        You are logged in as {{ user.role|default:"user" }}.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>API Dashboard</h1>
+    <p>Welcome to the Learning Platform API. Below are the available endpoints:</p>
+    <div class="list-group">
+        {% for endpoint in endpoints %}
+        <a href="{{ endpoint.url }}" class="list-group-item list-group-item-action">
+            <h5 class="mb-1">{{ endpoint.name }}</h5>
+            <p class="mb-1">{{ endpoint.description }}</p>
+            <small>{{ endpoint.url }}</small>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

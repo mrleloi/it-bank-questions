@@ -6,19 +6,20 @@ from celery.schedules import crontab
 from django.conf import settings
 
 # Set default Django settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.development')
+os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
 
 # Create Celery app
-app = Celery('learning_platform')
+celery_app = Celery('learning_platform')
 
 # Configure Celery
-app.config_from_object('django.conf:settings', namespace='CELERY')
+celery_app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load tasks from all registered Django apps
-app.autodiscover_tasks()
+celery_app.autodiscover_tasks()
 
 # Celery beat schedule
-app.conf.beat_schedule = {
+celery_app.conf.beat_schedule = {
     'cleanup-expired-sessions': {
         'task': 'infrastructure.celery.tasks.cleanup_tasks.cleanup_expired_sessions',
         'schedule': crontab(minute=0, hour='*/4'),  # Every 4 hours
@@ -46,7 +47,7 @@ app.conf.beat_schedule = {
 }
 
 # Celery configuration
-app.conf.update(
+celery_app.conf.update(
     task_serializer='json',
     accept_content=['json'],
     result_serializer='json',

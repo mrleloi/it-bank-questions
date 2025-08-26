@@ -5,11 +5,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from application.use_cases.analytics import (
-    GetUserAnalyticsUseCase,
-    GetLearningPredictionUseCase,
-    GetStudyRecommendationsUseCase
-)
 from application.dto.response import (
     StudyPatternResponse,
     PerformanceTrendResponse,
@@ -21,14 +16,14 @@ from ..dependencies import get_current_user_id, get_use_case
 router = APIRouter()
 
 
-@router.get("/user")
-async def get_user_analytics(
-    period_days: int = Query(30, ge=1, le=365),
-    user_id: UUID = Depends(get_current_user_id),
-    use_case: GetUserAnalyticsUseCase = Depends(get_use_case("get_user_analytics_use_case"))
-):
-    """Get comprehensive user analytics."""
-    return await use_case.execute(user_id, period_days)
+# @router.get("/user")
+# async def get_user_analytics(
+#     period_days: int = Query(30, ge=1, le=365),
+#     user_id: UUID = Depends(get_current_user_id),
+#     use_case: GetUserAnalyticsUseCase = Depends(get_use_case("get_user_analytics_use_case"))
+# ):
+#     """Get comprehensive user analytics."""
+#     return await use_case.execute(user_id, period_days)
 
 
 @router.get("/study-patterns", response_model=StudyPatternResponse)
@@ -61,24 +56,24 @@ async def get_learning_velocity(
     return await use_case.execute(user_id, period_days)
 
 
-@router.get("/predictions/completion", response_model=CompletionPredictionResponse)
-async def predict_completion(
-    facet_id: UUID = Query(...),
-    user_id: UUID = Depends(get_current_user_id),
-    use_case: GetLearningPredictionUseCase = Depends(get_use_case("get_learning_prediction_use_case"))
-):
-    """Predict completion time for a facet."""
-    return await use_case.execute(user_id, facet_id)
-
-
-@router.get("/recommendations")
-async def get_study_recommendations(
-    limit: int = Query(5, ge=1, le=20),
-    user_id: UUID = Depends(get_current_user_id),
-    use_case: GetStudyRecommendationsUseCase = Depends(get_use_case("get_study_recommendations_use_case"))
-):
-    """Get personalized study recommendations."""
-    return await use_case.execute(user_id, limit)
+# @router.get("/predictions/completion", response_model=CompletionPredictionResponse)
+# async def predict_completion(
+#     facet_id: UUID = Query(...),
+#     user_id: UUID = Depends(get_current_user_id),
+#     use_case: GetLearningPredictionUseCase = Depends(get_use_case("get_learning_prediction_use_case"))
+# ):
+#     """Predict completion time for a facet."""
+#     return await use_case.execute(user_id, facet_id)
+#
+#
+# @router.get("/recommendations")
+# async def get_study_recommendations(
+#     limit: int = Query(5, ge=1, le=20),
+#     user_id: UUID = Depends(get_current_user_id),
+#     use_case: GetStudyRecommendationsUseCase = Depends(get_use_case("get_study_recommendations_use_case"))
+# ):
+#     """Get personalized study recommendations."""
+#     return await use_case.execute(user_id, limit)
 
 
 @router.get("/insights")

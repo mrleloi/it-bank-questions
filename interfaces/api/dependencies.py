@@ -9,11 +9,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from jwt.exceptions import InvalidTokenError
 
-from shared.dependency_injection import Container
 from domain.repositories import *
 from domain.services import *
 from application.config import ApplicationConfig
 from application.dto.common import PaginationRequest
+from infrastructure.container import Container
+from infrastructure.importers import JsonQuestionImporter
 
 # Security
 security = HTTPBearer()
@@ -170,6 +171,27 @@ def get_progress_repository(
     return container.progress_repository()
 
 
+def get_content_repository(
+        container: Container = Depends(get_container)
+) -> 'ContentRepository':
+    """Get content repository."""
+    return container.content_repository()
+
+
+def get_event_repository(
+        container: Container = Depends(get_container)
+) -> 'EventRepository':
+    """Get event repository."""
+    return container.event_repository()
+
+
+def get_spaced_repetition_repository(
+        container: Container = Depends(get_container)
+) -> 'SpacedRepetitionRepository':
+    """Get spaced repetition repository."""
+    return container.spaced_repetition_repository()
+
+
 # Service dependencies
 def get_spaced_repetition_service(
         container: Container = Depends(get_container)
@@ -207,3 +229,10 @@ def get_use_case(use_case_name: str):
         return getattr(container, use_case_name)()
 
     return _get_use_case
+
+
+def get_json_importer(
+        container: Container = Depends(get_container)
+) -> 'JsonQuestionImporter':
+    """Get JSON question importer."""
+    return container.json_importer()

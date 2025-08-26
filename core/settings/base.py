@@ -2,14 +2,16 @@
 
 import os
 from pathlib import Path
-from datetime import timedelta
 import environ
+from dotenv import load_dotenv
 
 # Initialize environment variables
-env = environ.Env(
-    DEBUG=(bool, False),
-    ENVIRONMENT=(str, 'production'),
-)
+env = environ.Env()
+
+# Try to read the ENVIRONMENT variable from the OS environment
+load_dotenv('.env')
+OS_ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
+ENV_ENVIRONMENT_FILE = f'.env.{OS_ENVIRONMENT}'
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -17,6 +19,9 @@ ROOT_DIR = BASE_DIR.parent
 
 # Read .env file
 environ.Env.read_env(os.path.join(ROOT_DIR, '.env'))
+if os.path.exists(ENV_ENVIRONMENT_FILE):
+    environ.Env.read_env(os.path.join(BASE_DIR, ENV_ENVIRONMENT_FILE))
+    load_dotenv(ENV_ENVIRONMENT_FILE, override=True)
 
 # ========================================
 # CORE SETTINGS
@@ -50,7 +55,9 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'infrastructure.persistence',
+    'infrastructure.celery',
     'interfaces.rest',
+    'interfaces.cli',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -63,6 +70,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -97,7 +105,7 @@ ASGI_APPLICATION = 'core.asgi.application'
 # ========================================
 DATABASES = {
     'default': {
-        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
+        'ENGINE': env('DB_ENGINE', default='django.db.backends.mysql'),
         'NAME': env('DB_NAME'),
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
@@ -106,6 +114,8 @@ DATABASES = {
         'CONN_MAX_AGE': env.int('DB_CONN_MAX_AGE', default=60),
         'OPTIONS': {
             'connect_timeout': 10,
+            'max_connections': 100,
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         }
     }
 }
@@ -124,20 +134,12 @@ if env('DATABASE_URL', default=None):
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('CACHE_REDIS_URL', default='redis://127.0.0.1:6379/1'),
+        'LOCATION': env('CACHE_REDIS_URL', default='redis://127.0.0.1:6379/10'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PARSER_CLASS': 'redis.connection.HiredisParser',
-            'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
-            'CONNECTION_POOL_CLASS_KWARGS': {
-                'max_connections': 50,
-                'timeout': 20,
-            },
-            'MAX_CONNECTIONS': 1000,
-            'PICKLE_VERSION': -1,
         },
-        'KEY_PREFIX': 'learning_platform',
-        'TIMEOUT': env.int('CACHE_TTL_DEFAULT', default=3600),
+        'KEY_PREFIX': 'learning_platform_dev',
+        'TIMEOUT': 300,  # 5 minutes for development
     }
 }
 
@@ -171,6 +173,10 @@ CELERY_TASK_TIME_LIMIT = env.int('CELERY_TASK_TIME_LIMIT', default=1800)
 CELERY_TASK_SOFT_TIME_LIMIT = env.int('CELERY_TASK_SOFT_TIME_LIMIT', default=1500)
 CELERY_WORKER_MAX_TASKS_PER_CHILD = env.int('CELERY_WORKER_MAX_TASKS_PER_CHILD', default=1000)
 CELERY_RESULT_EXPIRES = 3600
+CELERY_TASK_ROUTES = {
+    'infrastructure.celery.tasks.*': {'queue': 'default'},
+}
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # Development settings
 if DEBUG:
@@ -212,16 +218,21 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS = env.int('JWT_REFRESH_TOKEN_EXPIRE_DAYS', default
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # For browsable API
+        'rest_framework.authentication.BasicAuthentication',  # For development
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # Web interface
+        'rest_framework.renderers.AdminRenderer',  # Admin-style interface
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',  # For HTML forms
+        'rest_framework.parsers.MultiPartParser',  # For file uploads
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -238,8 +249,53 @@ REST_FRAMEWORK = {
         'anon': f"{env.int('RATE_LIMIT_PER_MINUTE', default=60)}/minute",
         'user': f"{env.int('RATE_LIMIT_PER_HOUR', default=1000)}/hour",
     },
-    'EXCEPTION_HANDLER': 'interfaces.rest.exceptions.custom_exception_handler',
+
+    # Browsable API settings
+    'DEFAULT_METADATA_CLASS': 'rest_framework.metadata.SimpleMetadata',
+    'HTML_SELECT_CUTOFF': 1000,
+    'HTML_SELECT_CUTOFF_TEXT': "More than {count} items...",
+
+    # Exception handling
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+
+    # Schema generation
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+
+    # API versioning
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+
+    # Content negotiation
+    # 'DEFAULT_CONTENT_NEGOTIATION_CLASS': 'rest_framework.content_negotiation.DefaultContentNegotiation',
 }
+
+# Additional settings for better browsable API experience
+if DEBUG:
+    # In development, allow more permissive access for browsable API
+    REST_FRAMEWORK.update({
+        'DEFAULT_PERMISSION_CLASSES': [
+            'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # Allow read without auth
+        ],
+        'DEFAULT_THROTTLE_RATES': {
+            'anon': '1000/minute',
+            'user': '10000/hour',
+        },
+    })
+
+# Session settings for admin login
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_NAME = 'learning_platform_sessionid'
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Login URLs
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/api/'
+LOGOUT_REDIRECT_URL = '/admin/login/'
+
+# Admin site settings
+ADMIN_SITE_HEADER = 'Learning Platform Administration'
+ADMIN_SITE_TITLE = 'Learning Platform Admin'
+ADMIN_INDEX_TITLE = 'Welcome to Learning Platform Administration'
 
 # ========================================
 # CORS
@@ -267,7 +323,17 @@ DEFAULT_FROM_EMAIL = env('EMAIL_FROM_ADDRESS', default='noreply@learning-platfor
 # ========================================
 STATIC_URL = env('STATIC_URL', default='/static/')
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Collect static files từ các app (bao gồm REST framework)
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # Custom static files
+]
+
+# Static files finders
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
 
 MEDIA_URL = env('MEDIA_URL', default='/media/')
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -303,32 +369,38 @@ LOGGING = {
         'file': {
             'level': env('LOG_LEVEL', default='INFO'),
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': env('LOG_FILE', default='/app/logs/app.log'),
+            'filename': env('LOG_FILE', default='./logs/app.log'),
             'maxBytes': env.int('LOG_MAX_BYTES', default=10485760),
             'backupCount': env.int('LOG_BACKUP_COUNT', default=5),
             'formatter': 'verbose',
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': [
+            'console',
+            # 'file',
+        ],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': [
+                'console',
+                # 'file'
+            ],
             'level': env('LOG_LEVEL', default='INFO'),
             'propagate': False,
         },
-        'infrastructure': {
-            'handlers': ['console', 'file'],
-            'level': env('LOG_LEVEL', default='INFO'),
-            'propagate': False,
-        },
-        'application': {
-            'handlers': ['console', 'file'],
-            'level': env('LOG_LEVEL', default='INFO'),
-            'propagate': False,
-        },
+        # 'infrastructure': {
+        #     'handlers': ['console', 'file'],
+        #     'level': env('LOG_LEVEL', default='INFO'),
+        #     'propagate': False,
+        # },
+        # 'application': {
+        #     'handlers': ['console', 'file'],
+        #     'level': env('LOG_LEVEL', default='INFO'),
+        #     'propagate': False,
+        # },
     },
 }
 
@@ -382,3 +454,7 @@ USE_TZ = True
 # DEFAULT PRIMARY KEY
 # ========================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Create staticfiles directory if not exists
+if not (BASE_DIR / 'staticfiles').exists():
+    os.makedirs(BASE_DIR / 'staticfiles', exist_ok=True)
